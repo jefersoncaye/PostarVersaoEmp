@@ -1,8 +1,9 @@
-import time
 import requests as req
 import zipfile
 import shutil
 import os
+import passaParaFTP
+import lerVariaveis as le
 
 def pastaExiste(pastaBaixar, versao):
     if os.path.exists(pastaBaixar + '\\' + versao):
@@ -13,7 +14,6 @@ def pastaExiste(pastaBaixar, versao):
 
 def baixaVersaoGrus(build):
     url = 'http://grus:9000/job/Branch-VersaoAtual/' + build + '/artifact/*zip*/archive.zip'
-    print('Baixando arquivos, aguarde!')
     file = req.get(url, allow_redirects=True)
     open('archive.zip', 'wb').write(file.content)
 
@@ -31,6 +31,15 @@ def apagarMoverArquivos(pasta, versao):
 build = input('Build a liberar: ')
 versao = input('Versao: ')
 pastaBaixar = input('Pasta Baixar Versão: ')
+
+hostname = le.hostname
+username = le.username
+password = le.password
+porta = le.porta
+
+pastaRaiz = le.pastaRaiz
+pastaFTP = pastaRaiz + '/versoes'
+pastaVersao = pastaBaixar + '\\' + versao
 
 try:
     print('Baixando Arquivos da Versao..')
@@ -60,3 +69,11 @@ else:
     apagarMoverArquivos(pastaBaixar, versao)
     print(f'Versão pronta, pasta {pastaBaixar}\\{versao}')
     print('Build: http://grus:9000/job/Branch-VersaoAtual/' + build)
+
+
+sftp = passaParaFTP.SFTP(hostname, username, password, porta, versao, pastaVersao, pastaFTP, pastaRaiz)
+sftp.conectaSFTP()
+sftp.criaPastaversao()
+sftp.passaArquivos()
+sftp.substituiArquivos()
+sftp.close()
